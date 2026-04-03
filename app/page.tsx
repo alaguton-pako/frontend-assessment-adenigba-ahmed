@@ -1,65 +1,131 @@
-import Image from "next/image";
+import {
+  fetchPokemonList,
+  fetchPokemonByType,
+  fetchAllTypes,
+} from "@/lib/pokemon-api";
+import PokemonCard from "@/components/ui/pokemon-card";
+import Pagination from "@/components/ui/pagination";
+import SearchAndFilter from "@/components/ui/search-and-filter";
+import { PokemonListItem } from "@/types/pokemon";
 
-export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+interface PageProps {
+  searchParams: Promise<{ page?: string; search?: string; type?: string }>;
+}
+
+const ITEMS_PER_PAGE = 20;
+
+export default async function Home({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const currentPage = Math.max(1, Number(params?.page) || 1);
+  const searchTerm = params?.search?.toLowerCase() || "";
+  const typeFilter = params?.type || "";
+
+  // Fetch types server-side so the client component doesn't need to
+  const availableTypes = await fetchAllTypes();
+
+  let allMatchingPokemon: PokemonListItem[] = [];
+
+  if (typeFilter) {
+    // ✅ Server-side type filter: PokeAPI gives us the full list for a type
+    const byType = await fetchPokemonByType(typeFilter);
+
+    // Then apply name search on top if present
+    allMatchingPokemon = searchTerm
+      ? byType.filter((p) => p.name.toLowerCase().includes(searchTerm))
+      : byType;
+  } else if (searchTerm) {
+    // Name-only search: fetch a large batch to search through.
+    // PokeAPI has no server-side name search endpoint, so we grab the first
+    // 1302 (full dex) and filter. The response is tiny (just name + url per
+    // entry) and is cached via ISR, so this is fast in practice.
+    const all = await fetchPokemonList(0, 1302);
+    allMatchingPokemon = all.results.filter((p) =>
+      p.name.toLowerCase().includes(searchTerm),
+    );
+  } else {
+    // No filters — regular paginated fetch (most common path)
+    const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+    const data = await fetchPokemonList(offset, ITEMS_PER_PAGE);
+    console.log(data);
+
+    const totalPages = Math.ceil(data.count / ITEMS_PER_PAGE);
+    const ids = data.results.map((p) =>
+      Number(p.url.split("/").filter(Boolean).pop()),
+    );
+
+    return (
+      <div>
+        <h1 className="text-3xl font-bold mb-6">Pokémon Explorer</h1>
+        <SearchAndFilter
+          initialSearch=""
+          initialType=""
+          availableTypes={availableTypes}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
+          {data.results.map((pokemon, index) => (
+            <PokemonCard
+              key={pokemon.name}
+              name={pokemon.name}
+              id={ids[index]}
+              priority={index < 4}
+            />
+          ))}
+        </div>
+        <Pagination currentPage={currentPage} totalPages={totalPages} />
+      </div>
+    );
+  }
+
+  // ── Filtered path: paginate allMatchingPokemon in memory ──────────────────
+  const totalPages = Math.max(
+    1,
+    Math.ceil(allMatchingPokemon.length / ITEMS_PER_PAGE),
+  );
+
+  // Clamp page to valid range after filtering
+  const safePage = Math.min(currentPage, totalPages);
+  const start = (safePage - 1) * ITEMS_PER_PAGE;
+  const pageSlice = allMatchingPokemon.slice(start, start + ITEMS_PER_PAGE);
+
+  return (
+    <div>
+      <h1 className="text-3xl font-bold mb-6">Pokémon Explorer</h1>
+      <SearchAndFilter
+        initialSearch={params?.search || ""}
+        initialType={params?.type || ""}
+        availableTypes={availableTypes}
+      />
+
+      {pageSlice.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-2xl mb-2">😕</p>
+          <p className="text-gray-600 font-medium">No Pokémon found.</p>
+          <p className="text-gray-400 text-sm mt-1">
+            Try a different name or type.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      ) : (
+        <>
+          <p className="text-sm text-gray-500 mb-4">
+            {allMatchingPokemon.length} result
+            {allMatchingPokemon.length !== 1 ? "s" : ""}
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-2">
+            {pageSlice.map((pokemon, index) => {
+              const id = Number(pokemon.url.split("/").filter(Boolean).pop());
+              return (
+                <PokemonCard
+                  key={pokemon.name}
+                  name={pokemon.name}
+                  id={id}
+                  priority={index < 4}
+                />
+              );
+            })}
+          </div>
+          <Pagination currentPage={safePage} totalPages={totalPages} />
+        </>
+      )}
     </div>
   );
 }
