@@ -1,3 +1,0 @@
-module.exports=[93183,a=>{a.v({className:"inter_2fe1ab3d-module__-T-KAq__className",variable:"inter_2fe1ab3d-module__-T-KAq__variable"})},33290,a=>{"use strict";var b=a.i(7997),c=a.i(93183);let d={className:c.default.className,style:{fontFamily:"'Inter', 'Inter Fallback'",fontStyle:"normal"}};null!=c.default.variable&&(d.variable=c.default.variable),a.s(["default",0,function({children:a}){return(0,b.jsx)("html",{lang:"en",className:d.variable,children:(0,b.jsx)("body",{children:(0,b.jsx)("main",{className:"container mx-auto px-4 py-8 max-w-7xl",children:a})})})},"metadata",0,{title:"Pokémon Explorer",description:"Browse and search your favorite Pokémon"}],33290)},70864,a=>{a.n(a.i(33290))}];
-
-//# sourceMappingURL=%5Broot-of-the-server%5D__0akhr26._.js.map
