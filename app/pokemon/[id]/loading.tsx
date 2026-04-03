@@ -1,4 +1,3 @@
-// app/pokemon/[id]/loading.tsx — shown when a detail page is loading
 export default function Loading() {
   return (
     <div>

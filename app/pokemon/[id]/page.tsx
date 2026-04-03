@@ -8,7 +8,6 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-// Generate metadata dynamically for SEO/shareability
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
