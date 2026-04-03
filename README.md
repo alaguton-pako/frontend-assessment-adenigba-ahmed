@@ -10,7 +10,7 @@ A browsable, searchable Pokémon encyclopedia built with Next.js 16, TypeScript,
 
 ```bash
 git clone <repo-url>
-cd pokemon-content-explorer-app
+cd frontend-assessment-adenigba-ahmed
 npm install
 npm run dev
 ```
