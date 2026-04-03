@@ -32,12 +32,7 @@ export async function fetchAllTypes(): Promise<string[]> {
   return data.results.map((t: { name: string }) => t.name);
 }
 
-/**
- * Fetch all Pokémon that belong to a specific type.
- * PokeAPI's /type/:name endpoint returns every member of that type —
- * we use this for server-side type filtering so the client never has to
- * fire individual detail requests just to check a Pokémon's type.
- */
+
 export async function fetchPokemonByType(
   typeName: string,
 ): Promise<PokemonListItem[]> {
@@ -47,7 +42,6 @@ export async function fetchPokemonByType(
   if (!response.ok) throw new Error(`Failed to fetch type: ${typeName}`);
   const data = await response.json();
 
-  // data.pokemon is [{ pokemon: { name, url }, slot }]
   return data.pokemon.map(
     (entry: { pokemon: { name: string; url: string } }) => entry.pokemon,
   );

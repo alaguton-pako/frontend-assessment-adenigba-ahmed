@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Button from "./button";
 
 interface SearchAndFilterProps {
   initialSearch: string;
@@ -20,13 +19,12 @@ export default function SearchAndFilter({
   const [type, setType] = useState(initialType);
   const isFirstRender = useRef(true);
 
-  // Build and push URL — does NOT read searchParams, avoids the infinite loop
   const pushURL = useCallback(
     (nextSearch: string, nextType: string) => {
       const params = new URLSearchParams();
       if (nextSearch) params.set("search", nextSearch);
       if (nextType) params.set("type", nextType);
-      // Always reset to page 1 when filters change
+
       router.push(`/?${params.toString()}`, { scroll: false });
     },
     [router],
@@ -44,7 +42,6 @@ export default function SearchAndFilter({
     }, 300);
 
     return () => clearTimeout(timeout);
-    // ✅ No searchParams here — that was the infinite-loop culprit
   }, [search, type, pushURL]);
 
   const handleClear = () => {
@@ -55,18 +52,28 @@ export default function SearchAndFilter({
 
   return (
     <div className="flex flex-col sm:flex-row gap-4 mb-6">
+
+
+      <label htmlFor="pokemon-search" className="sr-only">
+        Search Pokémon
+      </label>
       <input
+        id="pokemon-search"
         type="text"
         placeholder="Search Pokémon..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="flex-1 px-4 py-2 border border-border rounded-lg bg-card text-card-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
 
+      <label htmlFor="pokemon-type" className="sr-only">
+        Filter by type
+      </label>
       <select
+        id="pokemon-type"
         value={type}
         onChange={(e) => setType(e.target.value)}
-        className="p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="p-2 border border-border rounded-lg bg-card text-card-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         <option value="">All Types</option>
         {availableTypes.map((t) => (
@@ -77,12 +84,13 @@ export default function SearchAndFilter({
       </select>
 
       {(search || type) && (
-        <Button
+        <button
           onClick={handleClear}
-          className="px-4 py-2 text-gray-600 hover:text-gray-800"
+          aria-label="Clear search and filters"
+          className="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
         >
           Clear ✕
-        </Button>
+        </button>
       )}
     </div>
   );

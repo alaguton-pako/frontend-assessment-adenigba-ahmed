@@ -66,10 +66,6 @@ export function useSearchAndFilter(pokemonList: PokemonListItem[]) {
       );
     }
 
-    // Note: Type filtering requires fetching additional data
-    // For this MVP, we'll do client-side type filtering by fetching details
-    // This is a trade-off documented in README
-
     return filtered;
   }, [pokemonList, searchTerm]);
 

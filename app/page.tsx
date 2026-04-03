@@ -34,10 +34,6 @@ export default async function Home({ searchParams }: PageProps) {
       ? byType.filter((p) => p.name.toLowerCase().includes(searchTerm))
       : byType;
   } else if (searchTerm) {
-    // Name-only search: fetch a large batch to search through.
-    // PokeAPI has no server-side name search endpoint, so we grab the first
-    // 1302 (full dex) and filter. The response is tiny (just name + url per
-    // entry) and is cached via ISR, so this is fast in practice.
     const all = await fetchPokemonList(0, 1302);
     allMatchingPokemon = all.results.filter((p) =>
       p.name.toLowerCase().includes(searchTerm),
@@ -75,7 +71,6 @@ export default async function Home({ searchParams }: PageProps) {
     );
   }
 
-  // ── Filtered path: paginate allMatchingPokemon in memory ──────────────────
   const totalPages = Math.max(
     1,
     Math.ceil(allMatchingPokemon.length / ITEMS_PER_PAGE),

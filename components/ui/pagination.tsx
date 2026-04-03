@@ -31,6 +31,7 @@ export default function Pagination({
         disabled={currentPage === 1}
         variant="outline"
         className={`disabled:cursor-not-allowed`}
+        aria-label="Previous page"
       >
         Previous
       </Button>
@@ -41,6 +42,7 @@ export default function Pagination({
         onClick={() => goToPage(currentPage + 1)}
         disabled={currentPage === totalPages}
         variant="outline"
+        aria-label="Next page"
       >
         Next
       </Button>
