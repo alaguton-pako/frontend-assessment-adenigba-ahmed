@@ -46,7 +46,6 @@ export default async function Home({ searchParams }: PageProps) {
     // No filters — regular paginated fetch (most common path)
     const offset = (currentPage - 1) * ITEMS_PER_PAGE;
     const data = await fetchPokemonList(offset, ITEMS_PER_PAGE);
-    console.log(data);
 
     const totalPages = Math.ceil(data.count / ITEMS_PER_PAGE);
     const ids = data.results.map((p) =>
